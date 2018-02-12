@@ -51,6 +51,7 @@ class Month():
         self.rates               = read_csv(month, 'rates.CSV')
 
     def steam_cost(self):
+        """Return the generation of steam in lb."""
         aux1 = sum(self.month_hours['F7424'])
         aux2 = sum(self.month_hours['F7425'])
         whb1 = sum(self.month_hours['F7421'])
@@ -58,15 +59,23 @@ class Month():
         cogen= sum(self.month_hours['FS74409DUP'])
         return aux1,aux2,whb1,whb2,cogen
 
-    def auxb_eff(self):
-        aux2_ng    = sum(self.month_hours['F7427DUP']) # KCFM/day
-        aux2_lfg   = sum(self.month_hours['F7428DUP']) # KCFM/day
-        aux1_ng    = sum(self.month_hours['F7431DUP']) # KCFM/day
-        aux1_lfg   = sum(self.month_hours['F7432DUP']) # KCFM/day
-        aux2_steam = sum(self.month_hours['F7425']) # lb/hr
-        aux1_steam = sum(self.month_hours['F7424']) # lb/hr
+    def aux_eff(self):
+        """Return the efficiency of aux boilers."""
+        MMBtu_per_kcf_ng = 1.03
+        MMBtu_per_kcf_lfg = 0.55
+        MMBtu_per_lb_steam = 1194
+        aux2_ng    = sum(self.month_hours['F7427DUP'])/24*MMBtu_per_kcf_ng 
+        aux2_lfg   = sum(self.month_hours['F7428DUP'])/24*MMBtu_per_kcf_ng 
+        aux1_ng    = sum(self.month_hours['F7431DUP'])/24*MMBtu_per_kcf_lfg
+        aux1_lfg   = sum(self.month_hours['F7432DUP'])/24*MMBtu_per_kcf_lfg
+        aux2_steam = sum(self.month_hours['F7425'])*MMBtu_per_lb_steam
+        aux1_steam = sum(self.month_hours['F7424'])*MMBtu_per_lb_steam
+        aux1_eff = (aux1_ng + aux1_lfg)/aux1_steam
+        aux2_eff = (aux2_ng + aux2_lfg)/aux2_steam
+        return aux1_eff, aux2_eff
 
     def cogen_ecost(self):
+        """Return demand charge for the given month."""
 
         demand = self.billing_cycle_hours['PGEPWR']
         max_index = np.argmax(demand) 
@@ -123,5 +132,5 @@ class Month():
 if __name__ == "__main__":
     dec17 = Month('dec17')
     print dec17.rates
-    print dec17.demand()
+    print dec17.cogen_ecost()
 
